@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Territory</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css"></head><body>
+<div id="app">
+ <canvas id="cv"></canvas>
+ <div id="hud"><button id="mb" class="glass">☰</button><div id="stats" class="glass"></div><div id="lb" class="glass"></div></div>
+ <div id="bot" class="glass">
+  <div id="bi"><div><small>Войска</small><b id="tr">0</b></div><div id="pv"></div></div>
+  <input id="pct" type="range" min="1" max="100" step="1" value="30">
+  <div id="chips"><button data-v="10">10%</button><button data-v="25">25%</button><button data-v="50">50%</button><button data-v="100">100%</button></div>
+  <div id="ab"></div>
+ </div>
+ <div id="toast"></div>
+</div>
+<div id="ov"></div>
+<script src="script.js"></script>
+</body></html>
