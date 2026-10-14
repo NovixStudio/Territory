@@ -3300,7 +3300,7 @@ document.addEventListener('visibilitychange',()=>{persist();if(document.hidden&&
 /* ===== Сетевая игра (WebRTC без сервера) =====
    Хозяин (игрок 1) считает всю игру, гость (игрок 2) шлёт тапы и получает состояние карты.
    У гостя индексы игроков 1<->2 поменяны местами, чтобы он видел себя как «игрока 1». */
-let netPC=null,netDC=null,netRole=null,netG=0,netSeed=0,netPeerName='',netInit=null,netLast=null,netIdx=null,netDirty=0;
+let netUp=0,netPC=null,netDC=null,netRole=null,netG=0,netSeed=0,netPeerName='',netInit=null,netLast=null,netIdx=null,netDirty=0;
 const NET16=['blitz','breakthrough','mobil','reinforce','sabotage','blessing','frost','meteor','whirl','wedge','bombard','regen','eruption','steal','golden','infinity'].filter(id=>ABS[id]);
 const NET_ALL=Object.keys(ABS).filter(id=>!ABS[id].ps&&!DOM[id]);
 const NET_M=NET_ALL.filter(id=>ABS[id].m),NET_A=NET_ALL.filter(id=>!ABS[id].m&&!ABS[id].sh),NET_SH=NET_ALL.filter(id=>ABS[id].sh);
@@ -3342,11 +3342,12 @@ async function netPaste(id){
 }
 
 // ---------- соединение ----------
-function netClose(){const pc=netPC,dc=netDC;netPC=null;netDC=null;try{dc&&dc.close()}catch(e){}try{pc&&pc.close()}catch(e){}}
+function netClose(){netUp=0;const pc=netPC,dc=netDC;netPC=null;netDC=null;try{dc&&dc.close()}catch(e){}try{pc&&pc.close()}catch(e){}}
 function netMk(){
  netClose();
  const pc=new RTCPeerConnection(NET_ICE);netPC=pc;
  pc.onconnectionstatechange=()=>{if(pc===netPC&&(pc.connectionState==='failed'||pc.connectionState==='closed'))netLost()};
+ setTimeout(()=>{if(pc===netPC&&!netUp&&pc.remoteDescription&&pc.connectionState!=='connected')netSt('⏳ Долго соединяюсь… если не выйдет — попробуйте «Через интернет»')},12000);
  return pc;
 }
 function netGather(pc){
@@ -3360,15 +3361,16 @@ function netGather(pc){
 }
 function netBind(dc){
  netDC=dc;dc.binaryType='arraybuffer';
- dc.onopen=()=>{if(netRole==='guest'){netSend({t:'hello',name:sv.set.name||myName});netSt('Соединено, жду хозяина…')}else netSt('Друг подключается…')};
+ dc.onopen=()=>{netUp=1;if(netRole==='guest'){netSend({t:'hello',name:sv.set.name||myName});netSt('Соединено, жду хозяина…')}else netSt('Друг подключается…')};
  dc.onmessage=e=>netMsg(e.data);
  dc.onclose=()=>{if(dc===netDC)netLost()};
 }
 const netSend=o=>{if(netDC&&netDC.readyState==='open')netDC.send(typeof o==='string'||o instanceof ArrayBuffer?o:JSON.stringify(o))};
 function netLost(){
  if(!netRole)return;
- clearInterval(timer);netClose();phase='over';
- scr(`<h1>🔌 Связь потеряна</h1><p>Соединение с другим игроком прервалось.</p><button data-a="netquit">В меню</button>`);
+ const was=netUp;clearInterval(timer);netClose();phase='over';
+ if(!was)scr(`<h1>😕 Не удалось соединиться</h1><p>Телефоны не смогли связаться напрямую. Так бывает, если Wi‑Fi изолирует устройства друг от друга, включён VPN или у кого-то мобильный интернет.</p><p>Попробуйте режим «Через интернет» — он работает с любой сетью (нужен только интернет у обоих).</p><button data-a="netroom">🌍 Создать комнату</button><button data-a="netroomjoin">🌍 Войти в комнату</button><button class="s" data-a="netmenu">← Назад</button>`);
+ else scr(`<h1>🔌 Связь потеряна</h1><p>Соединение с другим игроком прервалось.</p><button data-a="netquit">В меню</button>`);
 }
 function netQuit(silent){
  netClose();netRole=null;netG=0;netPeerName='';netInit=null;netLast=null;clearInterval(timer);
@@ -3380,11 +3382,75 @@ function netQuit(silent){
 // ---------- экраны ----------
 function netMenu(){
  netQuit(true);
- scr(`<h1>🌐 Сетевая игра</h1><p>Два игрока по одному Wi‑Fi (или через раздачу с телефона). Сервер не нужен: телефоны соединяются напрямую, коды передаются через мессенджер.</p><button data-a="nethost">🎮 Создать игру</button><button data-a="netjoin">🔗 Присоединиться</button><div class="sh"><div>Как играть</div><div class="row"><div class="tx"><small>Хозяин создаёт игру и отправляет код другу, друг вставляет его и присылает код ответа. После подключения хозяин настраивает карту и ботов. Побеждает тот, кто первым захватит нужную долю суши или уничтожит соперника. Способности в сетевой игре отключены.</small></div></div></div><button class="s" data-a="home">← Назад</button>`);
+ scr(`<h1>🌐 Сетевая игра</h1><p>Два игрока по одному Wi‑Fi (или через раздачу с телефона). Сервер не нужен: телефоны соединяются напрямую, коды передаются через мессенджер.</p><button data-a="nethost">🎮 Создать игру</button><button data-a="netjoin">🔗 Присоединиться</button><div class="sec">Через интернет (если напрямую не выходит)</div><button data-a="netroom">🌍 Создать комнату</button><button data-a="netroomjoin">🌍 Войти по коду комнаты</button><div class="sh"><div>Как играть</div><div class="row"><div class="tx"><small>Хозяин создаёт игру и отправляет код другу, друг вставляет его и присылает код ответа. После подключения хозяин настраивает карту и ботов. Побеждает тот, кто первым захватит нужную долю суши или уничтожит соперника. Способности в сетевой игре отключены.</small></div></div></div><button class="s" data-a="home">← Назад</button>`);
 }
 function netCodeBlock(id,code){
  const share=tg&&tg.openTelegramLink?`<button class="s" data-a="netshare" data-id="${id}">✈️ Отправить в Telegram</button>`:'';
  return `<textarea id="${id}" class="ti" rows="3" readonly></textarea><button data-a="netcopy" data-id="${id}">📋 Копировать</button>${share}`;
+}
+// ---------- запасной канал: комната через публичный MQTT-брокер (работает в любой сети) ----------
+const NET_BROKERS=['wss://broker.hivemq.com:8884/mqtt','wss://broker.emqx.io:8084/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+const mqStr=t=>{const b=new TextEncoder().encode(t);const o=new Uint8Array(2+b.length);o[0]=b.length>>8;o[1]=b.length&255;o.set(b,2);return o};
+const mqCat=(...a)=>{let n=0;for(const x of a)n+=x.length;const o=new Uint8Array(n);let i=0;for(const x of a){o.set(x,i);i+=x.length}return o};
+const mqPkt=(h,body)=>{const l=[];let n=body.length;do{let d=n%128;n=Math.floor(n/128);if(n)d|=128;l.push(d)}while(n);return mqCat(Uint8Array.of(h,...l),body)};
+function netMqtt(room,role){
+ const urls=window.NET_BROKERS||NET_BROKERS,tin='tv1/'+room+'/'+(role==='host'?'g':'h'),tout='tv1/'+room+'/'+(role==='host'?'h':'g');
+ const dc={readyState:'connecting',binaryType:'arraybuffer',onopen:null,onmessage:null,onclose:null,ws:null,get bufferedAmount(){return dc.ws?dc.ws.bufferedAmount:0},
+  send(d){if(dc.readyState!=='open')return;const pl=typeof d==='string'?mqCat(Uint8Array.of(83),new TextEncoder().encode(d)):mqCat(Uint8Array.of(66),new Uint8Array(d.buffer?d.buffer.slice(d.byteOffset,d.byteOffset+d.byteLength):d));dc.ws.send(mqPkt(0x30,mqCat(mqStr(tout),pl)))},
+  close(){dc.readyState='closed';clearInterval(dc.pt);try{dc.ws&&dc.ws.close()}catch(e){}}};
+ return new Promise((res,rej)=>{
+  let k=0;
+  const next=()=>{
+   if(k>=urls.length)return rej(new Error('Не удалось подключиться к серверу комнат'));
+   const url=urls[k++];let ws,done=0,buf=new Uint8Array(0);
+   const fail=()=>{if(done)return;done=1;try{ws.close()}catch(e){}next()};
+   try{ws=new WebSocket(url,'mqtt')}catch(e){return next()}
+   ws.binaryType='arraybuffer';const to=setTimeout(fail,7000);
+   ws.onerror=()=>{if(!done)fail()};
+   ws.onopen=()=>ws.send(mqPkt(0x10,mqCat(mqStr('MQTT'),Uint8Array.of(4,2,0,30),mqStr('tv'+Math.random().toString(36).slice(2,10)))));
+   ws.onclose=()=>{if(!done){fail();return}if(dc.readyState==='open'){dc.readyState='closed';clearInterval(dc.pt);dc.onclose&&dc.onclose()}};
+   ws.onmessage=e=>{
+    buf=mqCat(buf,new Uint8Array(e.data));
+    for(;;){
+     if(buf.length<2)return;
+     let n=0,m=1,i=1,b;do{if(i>=buf.length)return;b=buf[i++];n+=(b&127)*m;m*=128}while(b&128);
+     if(buf.length<i+n)return;
+     const h=buf[0],body=buf.subarray(i,i+n);buf=buf.subarray(i+n);const ty=h>>4;
+     if(ty===2){if(body[1]!==0)return fail();ws.send(mqPkt(0x82,mqCat(Uint8Array.of(0,1),mqStr(tin),Uint8Array.of(0))))}
+     else if(ty===9){if(done)continue;done=1;clearTimeout(to);dc.ws=ws;dc.readyState='open';dc.pt=setInterval(()=>{try{ws.send(Uint8Array.of(0xC0,0))}catch(e){}},20000);res(dc);dc.onopen&&dc.onopen()}
+     else if(ty===3){
+      const tl=(body[0]<<8)|body[1];let o=2+tl;if((h>>1)&3)o+=2;
+      const kind=body[o],pl=body.subarray(o+1);
+      if(dc.onmessage)dc.onmessage({data:kind===83?new TextDecoder().decode(pl):pl.slice().buffer});
+     }
+    }
+   };
+  };
+  next();
+ });
+}
+async function netRoomOpen(role,room){
+ const dc=await netMqtt(room,role);netBind(dc);netUp=1;
+ if(role==='guest'){dc.onopen&&dc.onopen();setTimeout(()=>{if(netDC===dc&&!netPeerName)netSt('❌ Комната не найдена или хозяин не в сети')},9000)}
+}
+async function netRoomHost(){
+ netQuit(true);netRole='host';
+ const al='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let room='';for(let i=0;i<5;i++)room+=al[Math.random()*al.length|0];
+ scr(`<h1>🌍 Создаю комнату…</h1><p>Подключаюсь к серверу комнат</p>`);
+ try{await netRoomOpen('host',room)}catch(e){netRole=null;return scr(`<h1>Ошибка</h1><p>${esc(e.message||e)}. Проверьте интернет.</p><button class="s" data-a="netmenu">← Назад</button>`)}
+ if(netRole!=='host')return;
+ scr(`<h1>🌍 Комната готова</h1><p>Скажи другу этот код: он нажимает «Войти по коду комнаты».</p>${netCodeBlock('nco')}<p id="nst" style="min-height:18px;font-size:12px">Жду друга…</p><button class="s" data-a="netmenu">← Назад</button>`);
+ $('nco').value=room;
+}
+function netRoomJoin(){
+ netQuit(true);netRole='guest';
+ scr(`<h1>🌍 Войти в комнату</h1><p>Введи код комнаты от друга:</p><input id="nrc" class="ti" maxlength="6" placeholder="КОД" style="text-transform:uppercase;letter-spacing:4px;text-align:center;font-size:22px"><button data-a="netroomgo">Войти</button><p id="nst" style="min-height:18px;font-size:12px"></p><button class="s" data-a="netmenu">← Назад</button>`);
+}
+async function netRoomGo(){
+ const room=($('nrc').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+ if(room.length<4)return netSt('Введи код комнаты');
+ netSt('Подключаюсь…');netRole='guest';
+ try{await netRoomOpen('guest',room)}catch(e){netSt('❌ '+(e.message||e))}
 }
 async function netHostStart(){
  if(!window.RTCPeerConnection)return toast('Этот браузер не поддерживает WebRTC');
@@ -3447,6 +3513,9 @@ function netEndScreen(win){
 async function netAct(a,d){
  if(a==='net'||a==='netmenu')return netMenu();
  if(a==='nethost')return netHostStart();
+ if(a==='netroom')return netRoomHost();
+ if(a==='netroomjoin')return netRoomJoin();
+ if(a==='netroomgo')return netRoomGo();
  if(a==='netjoin')return netJoinScreen();
  if(a==='netcopy')return netCopy(d.id);
  if(a==='netpaste')return netPaste(d.id);
