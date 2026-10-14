@@ -46,7 +46,7 @@ const LEVELS=[
  th:{b:[[200,180,140],[96,76,128],[72,54,104],[124,62,92],[255,200,80]],x1:[112,82,64],x2:[52,42,92],pole:null,sh:[160,120,255],dp:[16,10,48],sea:.5,acc:'#e11d48'}}];
 let LV=LEVELS[0],cur=0;
 let sv={coins:0,up:{g:0,a:0,s:0}};try{Object.assign(sv,JSON.parse(localStorage.getItem('terr1')||'{}'))}catch(e){}
-function norm(){sv.set=Object.assign({vib:1,snd:1,names:1,pct:30},sv.set);sv.done=sv.done||0;sv.ab=sv.ab||{};sv.slots=sv.slots||[];while(sv.slots.length<5)sv.slots.push(null);sv.up=Object.assign({g:0,a:0,s:0,i:0,c:0,m:0,f:0},sv.up);sv.evo=sv.evo||0;if(sv.ord)sv.ord.run=null;sv.ord=Object.assign({best:0,runs:0,run:null},sv.ord);sv.fp=Object.assign({map:'cont',theme:0,size:'M',bots:8,bg:1.2,bs:300,ag:50,bf:12,goal:90,cd:1,gcd:0,isl:5,smart:0,adapt:0,focus:0,rar:2,th:128,inv:0,slots:['blitz','breakthrough','mobil',null,null]},sv.fp);while(sv.fp.slots.length<5)sv.fp.slots.push(null);
+function norm(){sv.set=Object.assign({vib:1,snd:1,names:1,fx:1,pct:30},sv.set);sv.done=sv.done||0;sv.ab=sv.ab||{};sv.slots=sv.slots||[];while(sv.slots.length<5)sv.slots.push(null);sv.up=Object.assign({g:0,a:0,s:0,i:0,c:0,m:0,f:0},sv.up);sv.evo=sv.evo||0;if(sv.ord)sv.ord.run=null;sv.ord=Object.assign({best:0,runs:0,run:null},sv.ord);sv.fp=Object.assign({map:'cont',theme:0,size:'M',bots:8,bg:1.2,bs:300,ag:50,bf:12,goal:90,cd:1,gcd:0,isl:5,smart:0,adapt:0,focus:0,rar:2,th:128,inv:0,slots:['blitz','breakthrough','mobil',null,null]},sv.fp);while(sv.fp.slots.length<5)sv.fp.slots.push(null);
  sv.fp.up=Object.assign({g:0,a:0,s:0,i:0,c:0,m:0,f:0},sv.fp.up);sv.fp.ufin=sv.fp.ufin|0;
  const mg={rewind:'tstop',dome:'domain',expand:'domain',domg:'domain',doms:'domain',domy:'domain'};
  for(const o in mg){if(sv.ab[o]!==undefined){const n=mg[o];sv.ab[n]=sv.ab[n]===undefined?sv.ab[o]:Math.max(sv.ab[n],sv.ab[o]);delete sv.ab[o]}sv.slots=sv.slots.map(s=>s===o?mg[o]:s);sv.fp.slots=sv.fp.slots.map(s=>s===o?mg[o]:s)}
@@ -147,7 +147,7 @@ function spawn(p,cx,cy){
  troops[p]=p>1?(LV.bs||200):150;
 }
 function newGame(){
- setupLevel();pickNames();if(LV.net)netNames();LV.net?genSeeded(netSeed):gen();terr=new Array(P).fill(0);troops=new Array(P).fill(0);bx0.fill(W);bx1.fill(-1);by0.fill(H);by1.fill(-1);bx0[0]=0;bx1[0]=W-1;by0[0]=0;by1[0]=H-1;ships=[];rev.fill(0);abUses=0;AL=0;unlocked=false;startIsle=-1;flash=0;attacks=[];adj=new Uint8Array(P*P);tick=0;earned=0;phase='pick';
+ setupLevel();pickNames();if(LV.net)netNames();LV.net?genSeeded(netSeed):gen();terr=new Array(P).fill(0);troops=new Array(P).fill(0);bx0.fill(W);bx1.fill(-1);by0.fill(H);by1.fill(-1);bx0[0]=0;bx1[0]=W-1;by0[0]=0;by1[0]=H-1;ships=[];bfxReset();rev.fill(0);abUses=0;AL=0;unlocked=false;startIsle=-1;flash=0;attacks=[];adj=new Uint8Array(P*P);tick=0;earned=0;phase='pick';
  $('ov').style.display='none';$('pct').value=sv.set.pct;$('stats').textContent='';$('lb').textContent='';$('tr').textContent='0';_hs=_hl=_ht=_pv='';resize(true);draw();toast('Нажми на сушу — выбери старт');if(LV.ord)ordBegin();if(LV.net)netHook();
 }
 function startBots(x0,y0){
@@ -175,11 +175,13 @@ function calcAdj(){
  }
 }
 function launch(a,t,amt){
- troops[a]-=amt;const ex=attacks.find(k=>k.a===a&&k.t===t);
+ if(a===1)bfxLaunch(a,amt);troops[a]-=amt;const ex=attacks.find(k=>k.a===a&&k.t===t);
  if(ex)ex.tr+=amt;else attacks.push({a,t,tr:amt});
 }
 let FRb=new Int32Array(1);
-function runAttack(k){
+let bfxB=0,bfxSx=0,bfxSy=0,bfxD=0,bfxCl=[];
+function runAttack(k){bfxCl.length=0;bfxB=0;bfxSx=0;bfxSy=0;bfxD=0;const r=runAttack0(k);if(bfxB)bfxBattle(k,bfxB,bfxSx/bfxB,bfxSy/bfxB,bfxD);return r}
+function runAttack0(k){
  if(refl>0&&k.t===1&&k.a>1&&!annulled(1,k.a)){k.t=k.a;k.a=1}
  if(grefl>0&&netG&&k.t===netG&&k.a!==netG&&k.a>0){const a0=k.a;k.a=netG;k.t=a0}
  const{a,t}=k;
@@ -201,8 +203,8 @@ function runAttack(k){
   const j=Math.random()*fn|0,i=fr[j],cost=(.45+dens*2)*(1+hh[i]*.8)*(a===1||a===netG?Math.max(.02,1-.07*UPX.a):1)*(a===1&&blz>0?.7:1)*(a===1&&bls>0?.4:1)*(a>1&&bblz[a]>0?.7:1)*(a>1&&bbls[a]>0?.4:1)*(t===1?(1+.1*UPX.f)*(adp>0?8:1)*(LV.dm||1):1)*(netG&&t===netG?1+.1*UPX.f:1)*(t>1&&badp[t]>0?8:1)*(a>1&&a!==netG?(LV.bc||1)/(1+AL*.5)/(a===bossP?2:1):1);
   if(k.tr<cost){troops[a]+=k.tr;k.tr=0;return false}
   fr[j]=fr[fn-1];fn--;
-  own[i]=a;terr[a]++;bb(a,i);k.tr-=cost;
-  if(t>0){terr[t]--;troops[t]=Math.max(0,troops[t]-dens*.5)}
+  own[i]=a;terr[a]++;bb(a,i);k.tr-=cost;bfxB++;if(bfxCl.length<48)bfxCl.push(i);bfxSx+=i%W;bfxSy+=(i/W|0);if(bfxB<=((a===1||t===1)?4:1))bfxCell(i,a,t);
+  if(t>0){terr[t]--;troops[t]=Math.max(0,troops[t]-dens*.5);bfxD+=dens*.5}
  }
  return true;
 }
@@ -233,7 +235,7 @@ function landShip(s){
   if(tr<cost)break;tr-=cost;own[i]=a;terr[a]++;bb(a,i);if(o>0){terr[o]--;troops[o]=Math.max(0,troops[o]-dens*.5)}got++;
  }
  troops[a]+=tr;
- if(a===1){toast(got?`⛵ Высадка: +${got} клеток`:'⛵ Высадка отбита');hap(got?'heavy':'rigid')}
+ if(got)bfxLand(lx,ly,a,got);if(a===1){toast(got?`⛵ Высадка: +${got} клеток`:'⛵ Высадка отбита');hap(got?'heavy':'rigid')}
 }
 function unlockIslands(){
  unlocked=true;midSnap=null;startSnap=null;
@@ -1146,6 +1148,323 @@ function cenS(t){
  const p=(t>0&&cn[t]>0)?t:1;if(!cn[p])return [VW/2,VH/2];
  return clampS(cam.ox+(cx[p]/cn[p]+.5)*cam.s,cam.oy+(cy[p]/cn[p]+.5)*cam.s);
 }
+// ===== ГРАФИКА БОЁВ: искры, ударные волны, стрелки наступления, цифры потерь =====
+var BF={p:[],ev:{},tx:[],hit:0,lastShk:0};
+function bfxReset(){BF={p:[],ev:{},tx:[],hit:0,lastShk:0};BF2={p:[],d:{},fell:{},fl:0,fa:0,fc:'255,255,255'}}
+var BF2={p:[],d:{},fell:{},fl:0,fa:0,fc:'255,255,255'};
+const BFR=(a,b)=>a+Math.random()*(b-a);
+const bfxC=c=>(c[0]|0)+','+(c[1]|0)+','+(c[2]|0);
+const bfxN=v=>v>=1e4?(v/1e3).toFixed(0)+'k':v>=1e3?(v/1e3).toFixed(1)+'k':String(Math.round(v));
+function bfxPush(o){const a=BF.p;a.push(o);if(a.length>520)a.splice(0,a.length-520)}
+function bfxText(o){const a=BF.tx;a.push(o);if(a.length>40)a.splice(0,a.length-40)}
+function bfxOn(x,y,m){const sx=cam.ox+x*cam.s,sy=cam.oy+y*cam.s;return sx>-m&&sy>-m&&sx<VW+m&&sy<VH+m}
+// захват одной клетки: вспышка + искры
+function bfxCell(i,a,t){
+ if(!sv.set.fx)return;
+ const x=i%W+.5,y=(i/W|0)+.5;if(!bfxOn(x,y,20))return;
+ const now=performance.now(),c=col[a];
+ bfxPush({k:'f',x,y,c,t0:now,life:380});
+ for(let q=0,n=t>0?3:1;q<n;q++){const an=Math.random()*6.283,v=BFR(35,120);
+  bfxPush({k:'s',x,y,vx:Math.cos(an)*v,vy:Math.sin(an)*v-20,c:q?c:[255,236,170],t0:now,life:BFR(320,680),sz:BFR(1.3,2.8)})}
+}
+// итог за тик по одной атаке: горячая точка, кольца, цифры, тряска
+function bfxBattle(k,n,mx,my,dmg){
+ if(!sv.set.fx)return;
+ const now=performance.now(),a=k.a,t=k.t,key=a+'>'+t,mine=a===1,hurt=t===1;
+ let e=BF.ev[key];if(!e)e=BF.ev[key]={a,t,x:mx+.5,y:my+.5,n:0,d:0,seen:0,tt:now+200,tr:0};
+ const m=e.seen&&now-e.seen<900?.35:1;e.x+=(mx+.5-e.x)*m;e.y+=(my+.5-e.y)*m;e.seen=now;e.n+=n;e.d+=dmg;e.tr=k.tr;
+ if(hurt)BF.hit=now;
+ if((mine||hurt)&&n>=10&&now>shk&&now-BF.lastShk>450){BF.lastShk=now;shake(110,hurt?2.6:1.6)}
+ if(now>=e.tt){
+  e.tt=now+((mine||hurt)?550:950);
+  if(e.n>0&&bfxOn(e.x,e.y,40)){
+   bfxPush({k:'r',x:e.x,y:e.y,c:col[a],t0:now,life:620,R:16+Math.min(46,Math.sqrt(e.n)*7)});
+   if(mine||hurt||cam.s>=1.2)bfxText({x:e.x,y:e.y,t:'+'+e.n,c:col[a],t0:now,life:1100,big:mine||hurt,dx:BFR(-10,10)});
+   if(t>0&&e.d>=1&&(mine||hurt))bfxText({x:e.x,y:e.y,t:'−'+bfxN(e.d),c:[255,100,100],t0:now+140,life:1100,big:0,dx:BFR(-14,14)});
+  }
+  e.n=0;e.d=0;
+ }
+ bfx2Battle(k,e,n,dmg,now);
+ if(t>0&&terr[t]===0)bfxFall(t,a,e.x,e.y);
+}
+// страна повержена
+function bfxFall(t,a,x,y){
+ const now=performance.now(),c=col[t];
+ for(let q=0;q<70;q++){const an=Math.random()*6.283,v=BFR(60,260);
+  bfxPush({k:'s',x,y,vx:Math.cos(an)*v,vy:Math.sin(an)*v,c:q%3?c:[255,240,200],t0:now,life:BFR(500,1100),sz:BFR(1.6,3.4)})}
+ for(let q=0;q<3;q++)bfxPush({k:'r',x,y,c:q?col[a]:[255,255,255],t0:now+q*120,life:800,R:50+q*34});
+ bfx2Fall(t,a,x,y);
+ fx('dtxt',{x:x-.5,y:y-.5,t:NAMES[t-1]+' повержен',col:bfxC(col[a]),sz:26,d:2000});
+ if(a===1||t===1){shake(380,4);hap('heavy')}
+}
+// десант высадился
+function bfxLand(x,y,a,got){
+ if(!sv.set.fx)return;
+ const now=performance.now(),c=col[a];x+=.5;y+=.5;
+ for(let q=0;q<26;q++){const an=Math.random()*6.283,v=BFR(40,170);
+  bfxPush({k:'s',x,y,vx:Math.cos(an)*v,vy:Math.sin(an)*v-30,c:q%3?c:[255,240,200],t0:now,life:BFR(400,900),sz:BFR(1.5,3)})}
+ bfxPush({k:'r',x,y,c,t0:now,life:700,R:30+Math.min(40,got)});bfxPush({k:'r',x,y,c:[255,255,255],t0:now+110,life:700,R:48+Math.min(40,got)});
+ bfxText({x,y,t:'⛵ +'+got,c,t0:now,life:1300,big:a===1,dx:0});
+ bfx2Land(x,y,a,got);
+}
+// игрок отправил войска
+function bfxLaunch(a,amt){
+ if(!sv.set.fx||!cn[a])return;
+ const now=performance.now(),x=cx[a]/cn[a]+.5,y=cy[a]/cn[a]+.5,c=col[a];
+ bfxPush({k:'r',x,y,c,t0:now,life:600,R:46});bfxPush({k:'r',x,y,c,t0:now+130,life:600,R:72});
+ for(let q=0;q<14;q++){const an=Math.random()*6.283,v=BFR(40,140);bfxPush({k:'s',x,y,vx:Math.cos(an)*v,vy:Math.sin(an)*v,c,t0:now,life:BFR(350,700),sz:BFR(1.4,2.6)})}
+ bfxText({x,y,t:'⚔ '+bfxN(amt),c,t0:now,life:1100,big:1,dx:0});
+}
+function bfxArrow(e,sx,sy,now,al){
+ const g=vctx,S=cam.s,a=e.a;if(!cn[a]||al<.02)return;
+ const ax=cam.ox+(cx[a]/cn[a]+.5)*S,ay=cam.oy+(cy[a]/cn[a]+.5)*S;
+ let dx=sx-ax,dy=sy-ay;const d=Math.hypot(dx,dy);if(d<30)return;dx/=d;dy/=d;
+ const tr=e.tr||0,len=Math.min(d-10,56+Math.min(70,Math.sqrt(tr)*1.1)),ex=sx-dx*10,ey=sy-dy*10,bx=ex-dx*len,by=ey-dy*len;
+ const mx=(bx+ex)/2-dy*len*.16,my=(by+ey)/2+dx*len*.16,c=bfxC(col[a]),w=2+Math.min(5,Math.log10(1+tr)*1.3);
+ g.save();g.lineCap='round';g.lineJoin='round';
+ const path=()=>{g.beginPath();g.moveTo(bx,by);g.quadraticCurveTo(mx,my,ex,ey)};
+ path();g.strokeStyle=`rgba(0,0,0,${.35*al})`;g.lineWidth=w+3;g.stroke();
+ path();g.strokeStyle=`rgba(${c},${.9*al})`;g.lineWidth=w;g.stroke();
+ g.setLineDash([6,12]);g.lineDashOffset=-now/22;path();g.strokeStyle=`rgba(255,255,255,${.8*al})`;g.lineWidth=Math.max(1.2,w*.45);g.stroke();g.setLineDash([]);
+ const tx=ex-mx,ty=ey-my,tl=Math.hypot(tx,ty)||1,ux=tx/tl,uy=ty/tl,hs=6+w*1.6;
+ g.beginPath();g.moveTo(ex+ux*hs*.7,ey+uy*hs*.7);g.lineTo(ex-ux*hs*.5-uy*hs*.75,ey-uy*hs*.5+ux*hs*.75);g.lineTo(ex-ux*hs*.5+uy*hs*.75,ey-uy*hs*.5-ux*hs*.75);g.closePath();
+ g.fillStyle=`rgba(${c},${al})`;g.fill();g.strokeStyle=`rgba(255,255,255,${.85*al})`;g.lineWidth=1.4;g.stroke();
+ // колонна бойцов: число растёт с размером армии, каждый — стрелка по касательной
+ {const nU=Math.min(14,3+((Math.sqrt(tr)/2.2)|0)),sz=2.4+w*.3;
+  for(let j=0;j<nU;j++){
+   const u=(now/(850+(j%3)*150)+j/nU)%1,v=1-u,px=v*v*bx+2*v*u*mx+u*u*ex,py=v*v*by+2*v*u*my+u*u*ey;
+   const tx2=2*v*(mx-bx)+2*u*(ex-mx),ty2=2*v*(my-by)+2*u*(ey-my),tl2=Math.hypot(tx2,ty2)||1,ux=tx2/tl2,uy=ty2/tl2;
+   const off=((j*37)%7-3)*1.25,qx=px-uy*off,qy=py+ux*off,fa=Math.sin(Math.PI*u)*al;if(fa<.03)continue;
+   g.fillStyle=`rgba(${c},${.95*fa})`;g.strokeStyle=`rgba(255,255,255,${.9*fa})`;g.lineWidth=1;
+   g.beginPath();g.moveTo(qx+ux*sz,qy+uy*sz);g.lineTo(qx-ux*sz*.8-uy*sz*.8,qy-uy*sz*.8+ux*sz*.8);g.lineTo(qx-ux*sz*.8+uy*sz*.8,qy-uy*sz*.8-ux*sz*.8);g.closePath();g.fill();g.stroke();
+  }}
+ if(a===1&&tr>=1){const f=12;g.font=`800 ${f}px system-ui,sans-serif`;g.textAlign='center';g.textBaseline='middle';g.lineWidth=f/4;g.strokeStyle=`rgba(0,0,0,${.8*al})`;
+  const lx=(bx+2*mx+ex)/4-dy*14,ly=(by+2*my+ey)/4+dx*14;g.strokeText(bfxN(tr),lx,ly);g.fillStyle=`rgba(255,255,255,${al})`;g.fillText(bfxN(tr),lx,ly)}
+ g.restore();
+}
+function drawBattleFx(now){
+ if(!sv.set.fx)return;
+ const g=vctx,S=cam.s,ox=cam.ox,oy=cam.oy;
+ // красное мерцание по краям, когда бьют игрока
+ if(BF.hit&&now-BF.hit<520)pulse('255,40,50',.45,.8,.4*(1-(now-BF.hit)/520));
+ // корабли: след и линия до цели
+ for(const s of ships){
+  const x=ox+(s.x+.5)*S,y=oy+(s.y+.5)*S,lx=ox+(s.lx+.5)*S,ly=oy+(s.ly+.5)*S,L=30,c=bfxC(col[s.a]);
+  g.save();g.lineCap='round';
+  g.setLineDash([5,7]);g.lineDashOffset=-now/40;g.strokeStyle=`rgba(${c},.55)`;g.lineWidth=1.6;g.beginPath();g.moveTo(x,y);g.lineTo(lx,ly);g.stroke();g.setLineDash([]);
+  const gr=g.createLinearGradient(x-s.ux*L,y-s.uy*L,x,y);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(1,'rgba(255,255,255,.6)');
+  g.strokeStyle=gr;g.lineWidth=3;g.beginPath();g.moveTo(x-s.ux*L,y-s.uy*L);g.lineTo(x,y);g.stroke();
+  g.strokeStyle='rgba(255,255,255,.28)';g.lineWidth=1.4;
+  for(const sg of[-1,1]){g.beginPath();g.moveTo(x-s.ux*L*.85-s.uy*sg*10,y-s.uy*L*.85+s.ux*sg*10);g.lineTo(x,y);g.stroke()}
+  const pr=.5+.5*Math.sin(now/120);g.strokeStyle=`rgba(${c},${.5+.4*pr})`;g.lineWidth=2;g.beginPath();g.arc(lx,ly,6+pr*4,0,6.3);g.stroke();
+  g.restore();
+ }
+ // частицы
+ const ps=BF.p;let w=0;
+ g.save();g.globalCompositeOperation='lighter';g.lineCap='round';
+ for(let j=0;j<ps.length;j++){
+  const p=ps[j],age=now-p.t0;if(age>=p.life)continue;ps[w++]=p;if(age<0)continue;
+  const u=age/p.life,al=1-u,sx=ox+p.x*S,sy=oy+p.y*S;
+  if(sx<-80||sy<-80||sx>VW+80||sy>VH+80)continue;
+  const c=p.c;
+  if(p.k==='f'){
+   const z=Math.max(2.5,S*1.2);
+   g.fillStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${.55*al})`;g.fillRect(sx-z*1.3,sy-z*1.3,z*2.6,z*2.6);
+   if(u<.3){g.fillStyle=`rgba(255,255,255,${.9*(1-u/.3)})`;g.fillRect(sx-z/2,sy-z/2,z,z)}
+  }else if(p.k==='s'){
+   const s=age/1000,s0=Math.max(0,s-.045);
+   g.strokeStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${al})`;g.lineWidth=p.sz*(.4+al*.6);
+   g.beginPath();g.moveTo(sx+p.vx*s0,sy+p.vy*s0+90*s0*s0);g.lineTo(sx+p.vx*s,sy+p.vy*s+90*s*s);g.stroke();
+  }else{
+   const R=p.R*(1-(1-u)*(1-u))+3;
+   g.strokeStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${.85*al})`;g.lineWidth=3*al+.6;g.beginPath();g.arc(sx,sy,R,0,6.3);g.stroke();
+  }
+ }
+ ps.length=w;g.restore();
+ // горячие точки и стрелки наступления
+ let arrows=0;
+ for(const key in BF.ev){
+  const e=BF.ev[key],ag=now-e.seen;
+  if(ag>1500||terr[e.a]===0){delete BF.ev[key];continue}
+  const sx=ox+e.x*S,sy=oy+e.y*S;if(sx<-60||sy<-60||sx>VW+60||sy>VH+60)continue;
+  const mine=e.a===1||e.t===1;
+  if(ag<650){
+   const k=1-ag/650,pr=.5+.5*Math.sin(now/90+e.x),R=(10+pr*5)*(mine?1.3:1);
+   g.save();g.globalCompositeOperation='lighter';gl(sx,sy,R*2.4,e.t>0?'255,120,60':bfxC(col[e.a]),.6*k);g.restore();
+   if(e.t>0){g.save();g.globalAlpha=k;g.font=`${Math.round(R*1.25)}px serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('⚔️',sx,sy);g.restore()}
+  }
+  if(mine||arrows<12){arrows++;bfxArrow(e,sx,sy,now,(mine?1:.4)*Math.min(1,(1500-ag)/700))}
+ }
+ // плавающие цифры
+ const tx=BF.tx;let w2=0;
+ g.save();g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';
+ for(let j=0;j<tx.length;j++){
+  const T=tx[j],age=now-T.t0;if(age>=T.life)continue;tx[w2++]=T;if(age<0)continue;
+  const u=age/T.life,sx=ox+T.x*S+T.dx*u,sy=oy+T.y*S-12-u*36;
+  if(sx<-60||sy<-60||sx>VW+60||sy>VH+60)continue;
+  const f=(T.big?18:12)*(1+Math.max(0,.5-u*4)),c=T.c;
+  g.globalAlpha=Math.max(0,Math.min(1,(1-u)*2.2));g.font=`800 ${f}px system-ui,sans-serif`;g.lineWidth=f/4;g.strokeStyle='rgba(0,0,0,.8)';
+  g.strokeText(T.t,sx,sy);g.fillStyle=`rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;g.fillText(T.t,sx,sy);
+ }
+ tx.length=w2;g.restore();
+}
+
+// ===== ГРАФИКА БОЁВ 2: фронт, молнии столкновения, дым, обломки, дуэль сил, падение страны =====
+const B2CAP=800;
+function b2Push(o){const a=BF2.p;a.push(o);if(a.length>B2CAP)a.splice(0,a.length-B2CAP)}
+const b2Smoke=()=>LV.hellfx?'44,22,16':LV.snow?'214,222,236':'74,70,64';
+function b2rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+// молния между сторонами: от атакующего к обороняющемуся, цвета двух стран
+function b2Bolt(e,a,t,heat,now){
+ const ax=cn[a]?cx[a]/cn[a]+.5:e.x-1,ay=cn[a]?cy[a]/cn[a]+.5:e.y;
+ let dx=e.x-ax,dy=e.y-ay;const dl=Math.hypot(dx,dy)||1;dx/=dl;dy/=dl;
+ const L=20+heat*30,N=9,pts=[];
+ for(let q=0;q<=N;q++){const u=(q/N-.5)*2*L,j=(q===0||q===N)?0:BFR(-7,7);pts.push([dx*u-dy*j,dy*u+dx*j])}
+ b2Push({k:'lt',x:e.x,y:e.y,pts,sa:bfxC(col[a]),sd:t>0?bfxC(col[t]):'255,255,255',t0:now,life:BFR(130,240)});
+}
+// итог тика по одной атаке: угли и дым на захваченных клетках, молнии, ударная волна, учёт для дуэли
+function bfx2Battle(k,e,n,dmg,now){
+ const a=k.a,t=k.t,mine=a===1||t===1;
+ const dk=a+'>'+t;let d=BF2.d[dk];if(!d)d=BF2.d[dk]={a,t,tot:0,lost:0,seen:0,t0:now,lt:0,sw:0};
+ if(now-d.seen>3500){d.tot=0;d.lost=0;d.t0=now}
+ d.tot+=n;d.lost+=dmg;d.seen=now;d.x=e.x;d.y=e.y;d.tr=k.tr;
+ const heat=Math.min(1,n/24),lim=Math.min(bfxCl.length,mine?14:3);
+ for(let q=0;q<lim;q++){
+  const i=bfxCl[q],x=i%W+.5,y=(i/W|0)+.5;if(!bfxOn(x,y,24))continue;
+  b2Push({k:'e',x,y,c:col[a],t0:now,life:BFR(520,980),vy:BFR(8,28),sz:BFR(.8,1.5)});
+  if(t>0&&(mine||cam.s>=1.2)&&Math.random()<.45)b2Push({k:'sm',x,y,vx:BFR(-9,9),t0:now,life:BFR(900,1500),sz:BFR(.7,1.3)});
+ }
+ if(t>0&&bfxOn(e.x,e.y,30)){
+  if((mine||cam.s>=1)&&now>d.lt){d.lt=now+BFR(240,480);b2Bolt(e,a,t,heat,now)}
+  if(heat>.45&&now>d.sw){d.sw=now+680;b2Push({k:'sw',x:e.x,y:e.y,c:col[a],t0:now,life:520,R:26+heat*34})}
+ }
+}
+// страна повержена: световой столб, три волны, обломки, дым, вспышка экрана
+function bfx2Fall(t,a,x,y){
+ if(!sv.set.fx)return;
+ const now=performance.now();if(BF2.fell[t]&&now-BF2.fell[t]<2500)return;BF2.fell[t]=now;
+ const c=col[t],ca=col[a];
+ b2Push({k:'pl',x,y,c:ca,t0:now,life:1250,w:30});
+ b2Push({k:'fl',x,y,c:[255,240,210],t0:now,life:720,R:120});
+ for(let q=0;q<3;q++)b2Push({k:'sw',x,y,c:q?c:ca,t0:now+q*150,life:900,R:70+q*50});
+ for(let q=0;q<38;q++){const an=BFR(0,6.283),v=BFR(30,190);b2Push({k:'d',x,y,vx:Math.cos(an)*v,vy:Math.sin(an)*v-BFR(40,150),c:q%3?c:[70,64,64],t0:now,life:BFR(800,1500),sz:BFR(1.6,3.6),g:260})}
+ for(let q=0;q<22;q++)b2Push({k:'sm',x:x+BFR(-4,4),y:y+BFR(-4,4),vx:BFR(-14,14),t0:now+BFR(0,400),life:BFR(1100,1900),sz:BFR(1.2,2.2)});
+ bfxText({x,y,t:'💀',c:[255,255,255],t0:now,life:1600,big:1,dx:0});
+ BF2.fl=now;BF2.fc=bfxC(ca);BF2.fa=(a===1||t===1)?.5:.2;
+}
+// десант: брызги, пена, волна
+function bfx2Land(x,y,a,got){
+ if(!sv.set.fx)return;
+ const now=performance.now(),c=col[a];x+=.5;y+=.5;
+ for(let q=0;q<22;q++){const an=BFR(0,6.283),v=BFR(40,150);b2Push({k:'d',x,y,vx:Math.cos(an)*v,vy:Math.sin(an)*v-BFR(60,140),c:q%2?[200,240,255]:[255,255,255],t0:now,life:BFR(500,950),sz:BFR(1.3,2.6),g:300})}
+ b2Push({k:'sw',x,y,c:[210,240,255],t0:now,life:640,R:30+Math.min(40,got)});
+ b2Push({k:'fl',x,y,c,t0:now,life:420,R:50});
+ for(let q=0;q<6;q++)b2Push({k:'sm',x,y,vx:BFR(-10,10),t0:now,life:BFR(800,1300),sz:BFR(.8,1.4)});
+}
+function drawBattleFx2(now){
+ if(!sv.set.fx)return;
+ const g=vctx,S=cam.s,ox=cam.ox,oy=cam.oy;
+ // кильватер кораблей
+ for(const s of ships){if(Math.random()<.28&&bfxOn(s.x,s.y,30))b2Push({k:'w',x:s.x+.5-s.ux*1.3,y:s.y+.5-s.uy*1.3,t0:now,life:BFR(550,900)})}
+ const ps=BF2.p;let w=0,op='source-over';
+ g.save();g.lineCap='round';g.lineJoin='round';
+ for(let j=0;j<ps.length;j++){
+  const p=ps[j],age=now-p.t0;if(age>=p.life)continue;ps[w++]=p;if(age<0)continue;
+  const u=age/p.life,al=1-u,sx=ox+p.x*S,sy=oy+p.y*S;
+  if(sx<-120||sy<-260||sx>VW+120||sy>VH+120)continue;
+  const need=(p.k==='sm'||p.k==='d'||p.k==='w')?'source-over':'lighter';
+  if(need!==op){g.globalCompositeOperation=need;op=need}
+  if(p.k==='e'){
+   const c=p.c,r=c[0]+(255-c[0])*u,gg=c[1]+(170-c[1])*u,b=c[2]+(70-c[2])*u,z=Math.max(1.8,S*p.sz),fl=.75+.25*Math.sin(age/40+p.x*9);
+   g.fillStyle=`rgba(${r|0},${gg|0},${b|0},${.9*al*fl})`;g.fillRect(sx-z/2,sy-p.vy*age/1000-z/2,z,z);
+  }else if(p.k==='sm'){
+   const r=(3+u*11)*p.sz*Math.max(.8,Math.min(1.6,S*.8)),a2=.3*al*(u<.12?u/.12:1);
+   g.fillStyle=`rgba(${b2Smoke()},${a2})`;g.beginPath();g.arc(sx+(p.vx||0)*age/1000,sy-age/1000*(12+p.sz*8),r,0,6.3);g.fill();
+  }else if(p.k==='d'){
+   const t=age/1000,z=p.sz*(1-u*.4);
+   g.fillStyle=`rgba(${p.c[0]|0},${p.c[1]|0},${p.c[2]|0},${al})`;g.fillRect(sx+p.vx*t-z/2,sy+p.vy*t+.5*p.g*t*t-z/2,z,z);
+  }else if(p.k==='w'){
+   g.fillStyle=`rgba(255,255,255,${.5*al})`;g.beginPath();g.arc(sx,sy,1.2+u*3.6,0,6.3);g.fill();
+  }else if(p.k==='sw'){
+   const R=p.R*(1-(1-u)*(1-u)*(1-u))+4,c=p.c;
+   g.strokeStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${.22*al})`;g.lineWidth=(1-u)*14+2;g.beginPath();g.arc(sx,sy,R,0,6.3);g.stroke();
+   g.strokeStyle=`rgba(255,255,255,${.55*al})`;g.lineWidth=(1-u)*3+.5;g.beginPath();g.arc(sx,sy,R,0,6.3);g.stroke();
+  }else if(p.k==='fl'){
+   gl(sx,sy,p.R*(.6+u*.7),bfxC(p.c),al*.9);
+  }else if(p.k==='lt'){
+   const P=p.pts,n=P.length,mid=n>>1,fa=al*(Math.random()<.3?.45:1);
+   for(let pass=0;pass<2;pass++){
+    g.lineWidth=pass?1.4:5;
+    for(let q=1;q<n;q++){g.strokeStyle=pass?`rgba(255,255,255,${fa})`:`rgba(${q<=mid?p.sa:p.sd},${.55*fa})`;g.beginPath();g.moveTo(sx+P[q-1][0],sy+P[q-1][1]);g.lineTo(sx+P[q][0],sy+P[q][1]);g.stroke()}
+   }
+   gl(sx,sy,16,'255,255,255',.5*fa);
+  }else if(p.k==='pl'){
+   const h=Math.min(1,u*4)*230*(1-u*.25),ww=p.w*(1-u*.5),c=bfxC(p.c);
+   const gr=g.createLinearGradient(0,sy,0,sy-h);gr.addColorStop(0,`rgba(${c},${.8*al})`);gr.addColorStop(1,`rgba(${c},0)`);
+   g.fillStyle=gr;g.fillRect(sx-ww/2,sy-h,ww,h);
+   const g2=g.createLinearGradient(0,sy,0,sy-h);g2.addColorStop(0,`rgba(255,255,255,${.9*al})`);g2.addColorStop(1,'rgba(255,255,255,0)');
+   g.fillStyle=g2;g.fillRect(sx-ww*.18,sy-h,ww*.36,h);
+  }
+ }
+ ps.length=w;g.restore();
+ // вспышка экрана при падении страны
+ if(BF2.fl){const dt=now-BF2.fl;if(dt>520)BF2.fl=0;else{g.fillStyle=`rgba(${BF2.fc},${BF2.fa*(1-dt/520)})`;g.fillRect(0,0,VW,VH)}}
+ // чистка старых дуэлей
+ for(const k in BF2.d)if(now-BF2.d[k].seen>6000)delete BF2.d[k];
+ b2Edge(g,now);
+ b2Duel(g,now);
+}
+// стрелка у края экрана: где тебя бьют, если это за кадром
+function b2Edge(g,now){
+ for(const k in BF2.d){
+  const d=BF2.d[k];if(d.t!==1||now-d.seen>1100||bfxOn(d.x,d.y,10))continue;
+  const sx=cam.ox+d.x*cam.s,sy=cam.oy+d.y*cam.s,cxs=VW/2,cys=VH/2,dx=sx-cxs,dy=sy-cys;
+  const top=110,bot=Math.max(cys+40,VH-170),m=34;
+  const kk=Math.min((VW/2-m)/Math.abs(dx||1e-6),(dy<0?cys-top:bot-cys)/Math.abs(dy||1e-6));
+  const px=cxs+dx*kk,py=cys+dy*kk,ang=Math.atan2(dy,dx),pr=.5+.5*Math.sin(now/110),fa=Math.min(1,(1100-(now-d.seen))/400);
+  g.save();g.globalCompositeOperation='lighter';gl(px,py,38,'255,50,60',(.35+.3*pr)*fa);g.restore();
+  g.save();g.translate(px,py);g.rotate(ang);g.globalAlpha=fa;
+  g.fillStyle='rgba(255,70,80,.95)';g.strokeStyle='#fff';g.lineWidth=1.6;g.lineJoin='round';
+  g.beginPath();g.moveTo(13+pr*2,0);g.lineTo(-8,-10);g.lineTo(-8,10);g.closePath();g.fill();g.stroke();
+  g.restore();
+  g.save();g.globalAlpha=fa;g.font='800 11px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.8)';
+  const ln=Math.hypot(dx,dy)||1,lx=px-dx/ln*30,ly=py-dy/ln*30,nm=String(NAMES[d.a-1]||'').slice(0,10);
+  g.strokeText(nm,lx,ly);g.fillStyle='#fff';g.fillText(nm,lx,ly);g.restore();
+ }
+}
+// карточка дуэли: кто с кем бьётся, перевес сил, захват и потери
+function b2Duel(g,now){
+ let best=null;
+ for(const k in BF2.d){const d=BF2.d[k];if(d.t<=0||!(d.a===1||d.t===1)||now-d.seen>2200)continue;if(!best||d.seen>best.seen)best=d}
+ if(!best)return;
+ const d=best,age=now-d.seen,fa=Math.min(1,(2200-age)/500)*Math.min(1,(now-d.t0)/180+.35);
+ const bt=$('bot'),br=bt?bt.getBoundingClientRect():null;
+ const cw=Math.min(VW-16,360),ch=61,cxl=(VW-cw)/2,cyt=(br&&br.height>0?br.top:VH-60)-ch-8+(1-fa)*8;
+ if(cyt<90)return;
+ const A=Math.max(0,troops[d.a]+(d.tr||0)),D=Math.max(0,troops[d.t]),rt=A+D>0?A/(A+D):.5,ca=bfxC(col[d.a]),cd=bfxC(col[d.t]);
+ const hit=now-BF.hit<420;
+ g.save();g.globalAlpha=fa;
+ b2rr(g,cxl,cyt,cw,ch,14);g.fillStyle='rgba(10,16,30,.78)';g.fill();
+ g.lineWidth=hit?2:1;g.strokeStyle=hit?'rgba(255,80,90,.9)':'rgba(255,255,255,.12)';g.stroke();
+ g.textBaseline='middle';g.font='800 12px system-ui,sans-serif';
+ const nA=String(NAMES[d.a-1]||'').slice(0,11),nD=String(NAMES[d.t-1]||'').slice(0,11);
+ g.fillStyle=`rgb(${ca})`;g.beginPath();g.arc(cxl+16,cyt+16,5,0,6.3);g.fill();
+ g.textAlign='left';g.fillStyle='#fff';g.fillText(nA,cxl+27,cyt+16);
+ g.fillStyle=`rgb(${cd})`;g.beginPath();g.arc(cxl+cw-16,cyt+16,5,0,6.3);g.fill();
+ g.textAlign='right';g.fillStyle='#fff';g.fillText(nD,cxl+cw-27,cyt+16);
+ const pr=.5+.5*Math.sin(now/120);
+ g.textAlign='center';g.font=`${15+pr*2|0}px serif`;g.fillStyle='#fff';g.fillText('⚔️',cxl+cw/2,cyt+16);
+ g.font='700 10px system-ui,sans-serif';g.fillStyle='rgba(255,255,255,.65)';
+ g.textAlign='left';g.fillText(bfxN(A),cxl+27,cyt+31);g.textAlign='right';g.fillText(bfxN(D),cxl+cw-27,cyt+31);
+ const bx=cxl+14,bw=cw-28,by=cyt+36,bh=7,sp=bx+bw*rt+(Math.random()-.5)*(hit?3:1.2);
+ b2rr(g,bx,by,bw,bh,3.5);g.fillStyle=`rgba(${cd},.85)`;g.fill();
+ g.save();b2rr(g,bx,by,bw,bh,3.5);g.clip();g.fillStyle=`rgb(${ca})`;g.fillRect(bx,by,Math.max(0,sp-bx),bh);
+ g.globalCompositeOperation='lighter';gl(sp,by+bh/2,16,'255,255,255',.6+.3*pr);g.restore();
+ g.fillStyle='rgba(255,255,255,.95)';g.fillRect(sp-1,by-2,2,bh+4);
+ g.font='700 10px system-ui,sans-serif';g.textAlign='center';g.fillStyle='rgba(255,255,255,.7)';
+ g.fillText(`захвачено ${d.tot} · потери ${bfxN(d.lost)}`,cxl+cw/2,cyt+ch-5);
+ g.restore();
+}
 function fx(k,o){fxs.push(Object.assign({k,t0:performance.now(),d:1000},o||{}))}
 function shake(ms,a){shk=performance.now()+ms;shkAmp=a}
 function gl(x,y,r,c,a){const g=vctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${c},${Math.max(0,Math.min(1,a))})`);g.addColorStop(1,`rgba(${c},0)`);vctx.fillStyle=g;vctx.beginPath();vctx.arc(x,y,r,0,6.3);vctx.fill()}
@@ -1724,7 +2043,7 @@ function render(){
   if(frz>0||pfz>0){vg('150,215,255',.3);vctx.fillStyle='rgba(160,220,255,.1)';vctx.fillRect(0,0,VW,VH)}}
  drawDomains(nw);
  if(tstop>0)pulse('190,170,255',.4,.75,.3+.06*Math.sin(nw/220));
- drawFx(nw);
+ drawBattleFx(nw);drawBattleFx2(nw);drawFx(nw);
  if(purple){
   const dt=(performance.now()-purple.t0)/1000;
   if(dt>2.2)purple=null;else{
@@ -2360,7 +2679,7 @@ function shop(h='⚡ Прокачка',p,res){
 }
 function settings(){
  const t=(k,n)=>`<div class="row"><div class="tx"><b>${n}</b></div><button class="up ${sv.set[k]?'':'off'}" data-a="tog" data-k="${k}">${sv.set[k]?'Вкл':'Выкл'}</button></div>`;
- scr(`<h1>⚙️ Настройки</h1><p>Сохраняются на устройстве</p><div class="sh"><div>Основные</div><div class="row"><div class="tx"><b>Твоё имя</b><input id="nm" class="ti" type="text" maxlength="14" placeholder="${esc(myName)}" value="${esc(sv.set.name||'')}"></div></div>${t('vib','Вибрация')}${t('snd','Звуки')}${t('names','Названия на карте')}<div class="row"><div class="tx"><b>Сила атаки по умолчанию</b><small id="dpv">${sv.set.pct}%</small><input id="dp" type="range" min="1" max="100" value="${sv.set.pct}"></div></div><div class="row"><div class="tx"><b>Сбросить прогресс</b><small>Монеты, улучшения и уровни</small></div><button class="up" data-a="reset" style="background:#dc2626">Сброс</button></div></div><button class="s" data-a="${hub}">← Назад</button>`);
+ scr(`<h1>⚙️ Настройки</h1><p>Сохраняются на устройстве</p><div class="sh"><div>Основные</div><div class="row"><div class="tx"><b>Твоё имя</b><input id="nm" class="ti" type="text" maxlength="14" placeholder="${esc(myName)}" value="${esc(sv.set.name||'')}"></div></div>${t('vib','Вибрация')}${t('snd','Звуки')}${t('names','Названия на карте')}${t('fx','Эффекты боёв')}<div class="row"><div class="tx"><b>Сила атаки по умолчанию</b><small id="dpv">${sv.set.pct}%</small><input id="dp" type="range" min="1" max="100" value="${sv.set.pct}"></div></div><div class="row"><div class="tx"><b>Сбросить прогресс</b><small>Монеты, улучшения и уровни</small></div><button class="up" data-a="reset" style="background:#dc2626">Сброс</button></div></div><button class="s" data-a="${hub}">← Назад</button>`);
 }
 const PW=[1,1.2,1.45,1.8,2.5];
 const SB=1.5,SP=r=>PW[r]*SB; // тени сильнее обычных способностей в 1,5×
@@ -3389,12 +3708,13 @@ function netCodeBlock(id,code){
  return `<textarea id="${id}" class="ti" rows="3" readonly></textarea><button data-a="netcopy" data-id="${id}">📋 Копировать</button>${share}`;
 }
 // ---------- запасной канал: комната через публичный MQTT-брокер (работает в любой сети) ----------
-const NET_BROKERS=['wss://broker.hivemq.com:8884/mqtt','wss://broker.emqx.io:8084/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+const NET_BROKERS=['wss://broker.hivemq.com:8884/mqtt','wss://broker.emqx.io:8084/mqtt','wss://mqtt.eclipseprojects.io:443/mqtt','wss://test.mosquitto.org:8081/mqtt','wss://broker-cn.emqx.io:8084/mqtt'];
+const NET_AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const mqStr=t=>{const b=new TextEncoder().encode(t);const o=new Uint8Array(2+b.length);o[0]=b.length>>8;o[1]=b.length&255;o.set(b,2);return o};
 const mqCat=(...a)=>{let n=0;for(const x of a)n+=x.length;const o=new Uint8Array(n);let i=0;for(const x of a){o.set(x,i);i+=x.length}return o};
 const mqPkt=(h,body)=>{const l=[];let n=body.length;do{let d=n%128;n=Math.floor(n/128);if(n)d|=128;l.push(d)}while(n);return mqCat(Uint8Array.of(h,...l),body)};
-function netMqtt(room,role){
- const urls=window.NET_BROKERS||NET_BROKERS,tin='tv1/'+room+'/'+(role==='host'?'g':'h'),tout='tv1/'+room+'/'+(role==='host'?'h':'g');
+function netMqtt(room,role,idx){
+ const all=window.NET_BROKERS||NET_BROKERS,urls=idx==null?all:[all[idx]],rt=room.slice(0,5),tin='tv1/'+rt+'/'+(role==='host'?'g':'h'),tout='tv1/'+rt+'/'+(role==='host'?'h':'g');
  const dc={readyState:'connecting',binaryType:'arraybuffer',onopen:null,onmessage:null,onclose:null,ws:null,get bufferedAmount(){return dc.ws?dc.ws.bufferedAmount:0},
   send(d){if(dc.readyState!=='open')return;const pl=typeof d==='string'?mqCat(Uint8Array.of(83),new TextEncoder().encode(d)):mqCat(Uint8Array.of(66),new Uint8Array(d.buffer?d.buffer.slice(d.byteOffset,d.byteOffset+d.byteLength):d));dc.ws.send(mqPkt(0x30,mqCat(mqStr(tout),pl)))},
   close(){dc.readyState='closed';clearInterval(dc.pt);try{dc.ws&&dc.ws.close()}catch(e){}}};
@@ -3429,15 +3749,27 @@ function netMqtt(room,role){
   next();
  });
 }
+// хозяин пробует все серверы одновременно и берёт самый быстрый; номер сервера зашит в 6-м символе кода
+function netMqttRace(room,role){
+ const n=(window.NET_BROKERS||NET_BROKERS).length;
+ return new Promise((res,rej)=>{
+  let won=0,fails=0;
+  for(let i=0;i<n;i++)netMqtt(room,role,i).then(dc=>{if(won){dc.close();return}won=1;res({dc,i})},()=>{if(++fails>=n&&!won)rej(new Error('Ни один сервер комнат не отвечает'))});
+ });
+}
 async function netRoomOpen(role,room){
- const dc=await netMqtt(room,role);netBind(dc);netUp=1;
+ let dc,code=room;
+ if(role==='host'){const r=await netMqttRace(room,role);dc=r.dc;code=room+NET_AL[r.i]}
+ else{const i=room.length>5?NET_AL.indexOf(room[5]):-1,n=(window.NET_BROKERS||NET_BROKERS).length;dc=await netMqtt(room,role,i>=0&&i<n?i:null)}
+ netBind(dc);netUp=1;
  if(role==='guest'){dc.onopen&&dc.onopen();setTimeout(()=>{if(netDC===dc&&!netPeerName)netSt('❌ Комната не найдена или хозяин не в сети')},9000)}
+ return code;
 }
 async function netRoomHost(){
  netQuit(true);netRole='host';
  const al='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let room='';for(let i=0;i<5;i++)room+=al[Math.random()*al.length|0];
  scr(`<h1>🌍 Создаю комнату…</h1><p>Подключаюсь к серверу комнат</p>`);
- try{await netRoomOpen('host',room)}catch(e){netRole=null;return scr(`<h1>Ошибка</h1><p>${esc(e.message||e)}. Проверьте интернет.</p><button class="s" data-a="netmenu">← Назад</button>`)}
+ try{room=await netRoomOpen('host',room)}catch(e){netRole=null;return scr(`<h1>Ошибка</h1><p>${esc(e.message||e)}. Проверьте интернет.</p><button class="s" data-a="netmenu">← Назад</button>`)}
  if(netRole!=='host')return;
  scr(`<h1>🌍 Комната готова</h1><p>Скажи другу этот код: он нажимает «Войти по коду комнаты».</p><input id="nco" class="ti" readonly style="text-align:center;font-size:40px;font-weight:800;letter-spacing:8px;padding:14px 0"><button data-a="netcopy" data-id="nco">📋 Копировать код</button>${tg&&tg.openTelegramLink?'<button class="s" data-a="netshare" data-id="nco">✈️ Отправить в Telegram</button>':''}<p id="nst" style="min-height:18px;font-size:12px">Жду друга…</p><button class="s" data-a="netmenu">← Назад</button>`);
  $('nco').value=room;
