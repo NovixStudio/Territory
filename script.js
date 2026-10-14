@@ -3439,7 +3439,7 @@ async function netRoomHost(){
  scr(`<h1>🌍 Создаю комнату…</h1><p>Подключаюсь к серверу комнат</p>`);
  try{await netRoomOpen('host',room)}catch(e){netRole=null;return scr(`<h1>Ошибка</h1><p>${esc(e.message||e)}. Проверьте интернет.</p><button class="s" data-a="netmenu">← Назад</button>`)}
  if(netRole!=='host')return;
- scr(`<h1>🌍 Комната готова</h1><p>Скажи другу этот код: он нажимает «Войти по коду комнаты».</p>${netCodeBlock('nco')}<p id="nst" style="min-height:18px;font-size:12px">Жду друга…</p><button class="s" data-a="netmenu">← Назад</button>`);
+ scr(`<h1>🌍 Комната готова</h1><p>Скажи другу этот код: он нажимает «Войти по коду комнаты».</p><input id="nco" class="ti" readonly style="text-align:center;font-size:40px;font-weight:800;letter-spacing:8px;padding:14px 0"><button data-a="netcopy" data-id="nco">📋 Копировать код</button>${tg&&tg.openTelegramLink?'<button class="s" data-a="netshare" data-id="nco">✈️ Отправить в Telegram</button>':''}<p id="nst" style="min-height:18px;font-size:12px">Жду друга…</p><button class="s" data-a="netmenu">← Назад</button>`);
  $('nco').value=room;
 }
 function netRoomJoin(){
