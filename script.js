@@ -2679,7 +2679,7 @@ function shop(h='⚡ Прокачка',p,res){
 }
 function settings(){
  const t=(k,n)=>`<div class="row"><div class="tx"><b>${n}</b></div><button class="up ${sv.set[k]?'':'off'}" data-a="tog" data-k="${k}">${sv.set[k]?'Вкл':'Выкл'}</button></div>`;
- scr(`<h1>⚙️ Настройки</h1><p>Сохраняются на устройстве</p><div class="sh"><div>Основные</div><div class="row"><div class="tx"><b>Твоё имя</b><input id="nm" class="ti" type="text" maxlength="14" placeholder="${esc(myName)}" value="${esc(sv.set.name||'')}"></div></div>${t('vib','Вибрация')}${t('snd','Звуки')}${t('names','Названия на карте')}${t('fx','Эффекты боёв')}<div class="row"><div class="tx"><b>Сила атаки по умолчанию</b><small id="dpv">${sv.set.pct}%</small><input id="dp" type="range" min="1" max="100" value="${sv.set.pct}"></div></div><div class="row"><div class="tx"><b>Сбросить прогресс</b><small>Монеты, улучшения и уровни</small></div><button class="up" data-a="reset" style="background:#dc2626">Сброс</button></div></div><button class="s" data-a="${hub}">← Назад</button>`);
+ scr(`<h1>⚙️ Настройки</h1><p>Сохраняются на устройстве</p><div class="sh"><div>Основные</div><div class="row"><div class="tx">${sv.nick?`<b>Твой ник</b><small>${esc(sv.nick)} · меняется в разделе «Друзья»</small>`:`<b>Твоё имя</b><input id="nm" class="ti" type="text" maxlength="14" placeholder="${esc(myName)}" value="${esc(sv.set.name||'')}">`}</div></div>${t('vib','Вибрация')}${t('snd','Звуки')}${t('names','Названия на карте')}${t('fx','Эффекты боёв')}<div class="row"><div class="tx"><b>Сила атаки по умолчанию</b><small id="dpv">${sv.set.pct}%</small><input id="dp" type="range" min="1" max="100" value="${sv.set.pct}"></div></div><div class="row"><div class="tx"><b>Сбросить прогресс</b><small>Монеты, улучшения и уровни</small></div><button class="up" data-a="reset" style="background:#dc2626">Сброс</button></div></div><button class="s" data-a="${hub}">← Назад</button>`);
 }
 const PW=[1,1.2,1.45,1.8,2.5];
 const SB=1.5,SP=r=>PW[r]*SB; // тени сильнее обычных способностей в 1,5×
@@ -3196,7 +3196,7 @@ function home(){
  hub='home';clearInterval(timer);phase='menu';persist();
  document.documentElement.style.setProperty('--acc','#3b82f6');document.documentElement.style.setProperty('--gl','rgba(15,23,42,.66)');
  const tot=LEVELS.filter(Boolean).length,mc=(a,ic,t,sm,pri)=>`<button class="mc${pri?' pri':''}" data-a="${a}"><span class="mi">${ic}</span><span class="mt"><b>${t}</b><small>${sm}</small></span><span class="ar">›</span></button>`;
- scr(`<div class="logo"><div class="lm">🗺️</div><h1>TERRITORY</h1><p>Захвати весь мир</p></div>${mc('menu','🏆','Карьера',tot+' уровней, прокачка, кейсы, способности',1)}${mc('fp','🎮','Свободная игра','свои карты, настройка врагов и способностей')}${mc('net','🌐','Сетевая игра','вдвоём по Wi‑Fi, без сервера')}${mc('set','⚙️','Настройки','параметры игры')}`);
+ scr(`<div class="logo"><div class="lm">🗺️</div><h1>TERRITORY</h1><p>Захвати весь мир</p></div>${mc('menu','🏆','Карьера',tot+' уровней, прокачка, кейсы, способности',1)}${mc('fp','🎮','Свободная игра','свои карты, настройка врагов и способностей')}${mc('net','🌐','Сетевая игра','вдвоём онлайн или по Wi‑Fi')}${mc('netfr','👥','Друзья',sv.nick?'Твой ник: '+esc(sv.nick):'придумай ник и добавь друзей')}${mc('set','⚙️','Настройки','параметры игры')}`);
 }
 function freePlay(note){
  const f=sv.fp;
@@ -3688,7 +3688,7 @@ const netSend=o=>{if(netDC&&netDC.readyState==='open')netDC.send(typeof o==='str
 function netLost(){
  if(!netRole)return;
  const was=netUp;clearInterval(timer);netClose();phase='over';
- if(!was)scr(`<h1>😕 Не удалось соединиться</h1><p>Телефоны не смогли связаться напрямую. Так бывает, если Wi‑Fi изолирует устройства друг от друга, включён VPN или у кого-то мобильный интернет.</p><p>Попробуйте режим «Через интернет» — он работает с любой сетью (нужен только интернет у обоих).</p><button data-a="netroom">🌍 Создать комнату</button><button data-a="netroomjoin">🌍 Войти в комнату</button><button class="s" data-a="netmenu">← Назад</button>`);
+ if(!was)scr(`<h1>😕 Не удалось соединиться</h1><p>Телефоны не смогли связаться напрямую. Так бывает, если Wi‑Fi изолирует устройства друг от друга, включён VPN или у кого-то мобильный интернет.</p><p>Попробуйте онлайн-комнату — она работает с любой сетью (нужен только интернет у обоих).</p><button data-a="netroom">🌍 Создать комнату</button><button data-a="netroomjoin">🌍 Войти в комнату</button><button class="s" data-a="netmenu">← Назад</button>`);
  else scr(`<h1>🔌 Связь потеряна</h1><p>Соединение с другим игроком прервалось.</p><button data-a="netquit">В меню</button>`);
 }
 function netQuit(silent){
@@ -3701,11 +3701,239 @@ function netQuit(silent){
 // ---------- экраны ----------
 function netMenu(){
  netQuit(true);
- scr(`<h1>🌐 Сетевая игра</h1><p>Два игрока по одному Wi‑Fi (или через раздачу с телефона). Сервер не нужен: телефоны соединяются напрямую, коды передаются через мессенджер.</p><button data-a="nethost">🎮 Создать игру</button><button data-a="netjoin">🔗 Присоединиться</button><div class="sec">Через интернет (если напрямую не выходит)</div><button data-a="netroom">🌍 Создать комнату</button><button data-a="netroomjoin">🌍 Войти по коду комнаты</button><div class="sh"><div>Как играть</div><div class="row"><div class="tx"><small>Хозяин создаёт игру и отправляет код другу, друг вставляет его и присылает код ответа. После подключения хозяин настраивает карту и ботов. Побеждает тот, кто первым захватит нужную долю суши или уничтожит соперника. Способности в сетевой игре отключены.</small></div></div></div><button class="s" data-a="home">← Назад</button>`);
+ scr(`<h1>🌐 Сетевая игра</h1><p>Играй вдвоём онлайн: создай комнату и отправь код другу или зайди в открытую комнату.</p><button data-a="netroom">🌍 Создать комнату</button><button data-a="netroomjoin">🔑 Войти по коду</button><button data-a="netfblist">📋 Открытые комнаты</button><button data-a="netfr">👥 Друзья</button><div class="sec">По Wi‑Fi, без сервера</div><button class="s" data-a="nethost">🎮 Создать игру</button><button class="s" data-a="netjoin">🔗 Присоединиться</button><div class="sh"><div>Как играть</div><div class="row"><div class="tx"><small>Хозяин создаёт комнату и отправляет код другу (или ждёт, пока друг зайдёт из списка открытых комнат). После подключения хозяин настраивает карту и ботов. Побеждает тот, кто первым захватит нужную долю суши или уничтожит соперника.</small></div></div></div><button class="s" data-a="home">← Назад</button>`);
 }
 function netCodeBlock(id,code){
  const share=tg&&tg.openTelegramLink?`<button class="s" data-a="netshare" data-id="${id}">✈️ Отправить в Telegram</button>`:'';
  return `<textarea id="${id}" class="ti" rows="3" readonly></textarea><button data-a="netcopy" data-id="${id}">📋 Копировать</button>${share}`;
+}
+// ---------- онлайн-канал: Firebase Realtime Database ----------
+// rooms/<код>/h и /g — очереди сообщений хозяин→гость и гость→хозяин; rooms/<код>/p/h|g — «игрок в сети»; lobby/<код> — список открытых комнат.
+// Канал имитирует DataChannel (send/onmessage/onclose/readyState), поэтому вся логика игры работает без изменений.
+let netPubOn=1,netFbFail='';
+const netNewRoom=()=>{let r='';for(let i=0;i<5;i++)r+=NET_AL[Math.random()*NET_AL.length|0];return r};
+const fbWait=ms=>new Promise((res,rej)=>{const t0=Date.now();(function ck(){if(window.FB)return res(window.FB);if(window.FB_ERR||Date.now()-t0>ms)return rej(new Error('Сервер онлайн-игры недоступен'));setTimeout(ck,100)})()});
+const fbErr=e=>{const m=String(e&&e.message||e);return /permission/i.test(m)?'Нет доступа к базе: проверь правила Firebase и включён ли анонимный вход':m};
+const fbZ=p=>{try{p&&p.catch&&p.catch(()=>{})}catch(e){}};
+async function netFb(room,role){
+ try{
+  const F=await fbWait(9000);await F.authReady;
+  const {db,ref,set,get,push,remove,onChildAdded,onValue,onDisconnect,serverTimestamp}=F;
+  const R=ref(db,'rooms/'+room),me=role==='host'?'h':'g',other=me==='h'?'g':'h',pRef=ref(db,'rooms/'+room+'/p/'+me),lRef=ref(db,'lobby/'+room);
+  const nm=String(sv.set.name||myName||'Игрок').slice(0,14);
+  if(role==='host'){
+   if((await get(ref(db,'rooms/'+room+'/p/h'))).exists()){const e=new Error('Код занят');e.busy=1;throw e}
+   await set(R,{c:serverTimestamp()});
+   onDisconnect(R).remove();onDisconnect(lRef).remove();
+   await set(pRef,true);
+   if(netPubOn)await set(lRef,{n:nm,t:serverTimestamp()});
+  }else{
+   const [h,g]=await Promise.all([get(ref(db,'rooms/'+room+'/p/h')),get(ref(db,'rooms/'+room+'/p/g'))]);
+   if(!h.exists())throw new Error('Комната не найдена или хозяин не в сети');
+   if(g.exists())throw new Error('В комнате уже есть второй игрок');
+   onDisconnect(pRef).remove();await set(pRef,true);
+  }
+  const dc={readyState:'open',binaryType:'arraybuffer',onopen:null,onmessage:null,onclose:null,q:[],qb:0,inf:0,ft:0,
+   get bufferedAmount(){return dc.qb+dc.inf},
+   send(d){
+    if(dc.readyState!=='open')return;
+    let s;
+    if(typeof d==='string')s='T'+d;
+    else s='B'+b64(d instanceof ArrayBuffer?new Uint8Array(d):new Uint8Array(d.buffer,d.byteOffset,d.byteLength));
+    dc.q.push(s);dc.qb+=s.length;if(!dc.ft)dc.ft=setTimeout(dc.flush,70);
+   },
+   flush(){
+    dc.ft=0;if(dc.readyState!=='open'||!dc.q.length)return;
+    const items=dc.q,n=dc.qb;dc.q=[];dc.qb=0;dc.inf+=n;
+    push(ref(db,'rooms/'+room+'/'+me),{d:items}).then(()=>{dc.inf-=n},e=>{dc.inf-=n;console.warn('fb send',e);close(1)});
+   },
+   setPublic(on){if(role!=='host'||dc.readyState!=='open')return;fbZ(on?set(lRef,{n:nm,t:serverTimestamp()}):remove(lRef))},
+   close(){close(0)}};
+  let seen=role==='guest'?1:0,cT=0;
+  const u1=onChildAdded(ref(db,'rooms/'+room+'/'+other),snap=>{
+   const v=snap.val();fbZ(remove(snap.ref));
+   if(!v||!v.d)return;
+   const a=Array.isArray(v.d)?v.d:Object.values(v.d);
+   for(const s of a){
+    if(dc.readyState!=='open')break;
+    let m;try{m=s[0]==='T'?s.slice(1):unb64(s.slice(1)).buffer}catch(e){continue}
+    if(dc.onmessage)dc.onmessage({data:m});
+   }
+  });
+  const u2=onValue(ref(db,'rooms/'+room+'/p/'+other),s=>{
+   if(s.exists()){seen=1;if(role==='host')fbZ(remove(lRef))}
+   else if(seen)close(1);
+  });
+  const u3=onValue(ref(db,'.info/connected'),s=>{
+   if(s.val()===true){clearTimeout(cT);cT=0}
+   else if(!cT&&dc.readyState==='open')cT=setTimeout(()=>close(1),12000);
+  });
+  function close(notify){
+   if(dc.readyState==='closed')return;
+   dc.readyState='closed';clearTimeout(dc.ft);clearTimeout(cT);
+   try{u1();u2();u3()}catch(e){}
+   try{
+    if(role==='host'){fbZ(remove(R));fbZ(remove(lRef));fbZ(onDisconnect(R).cancel());fbZ(onDisconnect(lRef).cancel())}
+    else{fbZ(remove(pRef));fbZ(onDisconnect(pRef).cancel())}
+   }catch(e){}
+   if(notify&&dc.onclose)dc.onclose();
+  }
+  return dc;
+ }catch(e){const x=new Error(fbErr(e));x.busy=e&&e.busy;throw x}
+}
+function netPub(){
+ netPubOn=netPubOn?0:1;
+ if(netDC&&netDC.setPublic)netDC.setPublic(!!netPubOn);
+ const b=$('npubb');if(b)b.textContent=netPubOn?'👁 Видна в списке открытых комнат':'🙈 Скрыта — только по коду';
+}
+async function netFbList(){
+ netQuit(true);
+ scr(`<h1>📋 Открытые комнаты</h1><p id="nst" style="min-height:18px;font-size:12px">Загружаю…</p><div id="nrl"></div><button data-a="netfblist">↻ Обновить</button><button class="s" data-a="netmenu">← Назад</button>`);
+ try{
+  const F=await fbWait(9000);await F.authReady;
+  const snap=await F.get(F.query(F.ref(F.db,'lobby'),F.limitToLast(30)));
+  if(!$('nrl'))return;
+  const now=Date.now(),a=[];
+  snap.forEach(c=>{const v=c.val()||{};if(!v.t||now-v.t<2*36e5)a.push([c.key,String(v.n||'Игрок').slice(0,14)])});
+  netSt(a.length?'Выбери комнату:':'Сейчас открытых комнат нет — создай свою.');
+  $('nrl').innerHTML=a.reverse().map(([k,n])=>`<button class="s" data-a="netfbjoin" data-id="${esc(k)}">🌍 ${esc(n)} · ${esc(k)}</button>`).join('');
+ }catch(e){netSt('❌ '+fbErr(e))}
+}
+async function netFbJoin(code){
+ netQuit(true);netRole='guest';
+ scr(`<h1>🌍 Захожу в комнату…</h1><p id="nst" style="min-height:18px;font-size:12px">Подключаюсь…</p><button class="s" data-a="netmenu">← Назад</button>`);
+ try{await netRoomOpen('guest',code)}catch(e){netSt('❌ '+(e.message||e))}
+}
+// ---------- ники и друзья (Firebase) ----------
+// nicks/<ник в нижнем регистре>=uid · users/<uid>={n,t} · online/<uid>=1 · friends/<uid>/<uid друга>=1
+// reqs/<кому>/<от кого>={n,t} — заявки · inv/<кому>/<от кого>={n,r,t} — приглашения в комнату
+const NICK_RX=/^[A-Za-zА-Яа-яЁё0-9_]{3,14}$/;
+let netInvTo=null,fbLiveOn=0;
+async function fbMe(){
+ const F=await fbWait(9000);await F.authReady;
+ const u=F.uid&&F.uid();if(!u)throw new Error('Нет анонимного входа в Firebase');
+ return {F,u};
+}
+async function nickClaim(nick){
+ const {F,u}=await fbMe(),{ref,get,set,remove,serverTimestamp,db}=F,lc=nick.toLowerCase();
+ const cur=await get(ref(db,'nicks/'+lc));
+ if(cur.exists()&&cur.val()!==u)throw new Error('Этот ник уже занят');
+ await set(ref(db,'nicks/'+lc),u);
+ if(sv.nick&&sv.nick.toLowerCase()!==lc)fbZ(remove(ref(db,'nicks/'+sv.nick.toLowerCase())));
+ await set(ref(db,'users/'+u),{n:nick,t:serverTimestamp()});
+ sv.nick=nick;sv.set.name=nick;persist();
+ fbLive();
+}
+// присутствие, приглашения и заявки — работают, пока открыта игра
+async function fbLive(){
+ if(fbLiveOn||!sv.nick)return;fbLiveOn=1;
+ try{
+  const {F,u}=await fbMe(),{ref,get,set,remove,onValue,onChildAdded,onDisconnect,db}=F;
+  onValue(ref(db,'.info/connected'),s=>{if(s.val()===true){const r=ref(db,'online/'+u);onDisconnect(r).remove();fbZ(set(r,1))}});
+  let off=0;try{off=(await get(ref(db,'.info/serverTimeOffset'))).val()||0}catch(e){}
+  onChildAdded(ref(db,'inv/'+u),snap=>{
+   const v=snap.val()||{},fid=snap.key;
+   if(!v.r||Date.now()+off-(v.t||0)>18e4){fbZ(remove(snap.ref));return}
+   if(phase==='play'){toast('📨 '+String(v.n||'Друг')+' зовёт в игру — выйди в меню');return}
+   netInvBanner(String(v.n||'Друг'),String(v.r),fid);
+  });
+  let rc=0,rt=0;
+  onChildAdded(ref(db,'reqs/'+u),()=>{rc++;clearTimeout(rt);rt=setTimeout(()=>{toast('👥 Заявок в друзья: '+rc);rc=0},700)});
+ }catch(e){fbLiveOn=0;console.warn('fbLive',e)}
+}
+async function fbBoot(){
+ try{
+  const {F,u}=await fbMe(),{ref,get,set,serverTimestamp,db}=F;
+  if(sv.nick){
+   const lc=sv.nick.toLowerCase(),o=await get(ref(db,'nicks/'+lc));
+   if(!o.exists())await set(ref(db,'nicks/'+lc),u);
+   else if(o.val()!==u){sv.nick='';persist();toast('Ник занят другим устройством — выбери новый в «Друзья»')}
+   if(sv.nick)await set(ref(db,'users/'+u),{n:sv.nick,t:serverTimestamp()});
+  }
+  fbLive();
+ }catch(e){console.warn('fbBoot',e&&e.message||e)}
+}
+function netInvBanner(from,room,fid){
+ let b=$('invb');
+ if(!b){b=document.createElement('div');b.id='invb';b.style.cssText='position:fixed;left:10px;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:99;display:flex;align-items:center;gap:8px;padding:12px;border-radius:16px;background:rgba(15,23,42,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);color:#f1f5f9;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.4)';document.body.appendChild(b)}
+ b.innerHTML='';
+ const t=document.createElement('div');t.style.flex='1';t.innerHTML='📨 <b>'+esc(from)+'</b> зовёт в игру';
+ const mk=(txt,bg,fn)=>{const x=document.createElement('button');x.textContent=txt;x.style.cssText='padding:8px 12px;border-radius:10px;border:0;font-size:13px;font-weight:600;color:#fff;background:'+bg;x.onclick=fn;return x};
+ const done=async y=>{
+  b.remove();
+  try{const {F,u}=await fbMe();fbZ(F.remove(F.ref(F.db,'inv/'+u+'/'+fid)))}catch(e){}
+  if(y)netFbJoin(room);
+ };
+ b.append(t,mk('Принять','#3b82f6',()=>done(1)),mk('✕','#475569',()=>done(0)));
+ setTimeout(()=>{if(b.parentNode)b.remove()},60000);
+ hap&&hap('light');
+}
+function netNickScreen(note){
+ scr(`<h1>🪪 Твой ник</h1><p>Ник видят друзья и соперники. 3–14 символов: буквы, цифры, _</p><input id="nni" class="ti" maxlength="14" placeholder="Ник" value="${esc(sv.nick||'')}" style="text-align:center;font-size:20px"><p id="nst" style="min-height:18px;font-size:12px">${note||''}</p><button data-a="netnickgo">Сохранить</button><button class="s" data-a="${sv.nick?'netfr':'home'}">← Назад</button>`);
+}
+async function netNickGo(){
+ const nick=($('nni').value||'').trim();
+ if(!NICK_RX.test(nick))return netSt('Нужно 3–14 символов: буквы, цифры или _');
+ netSt('Проверяю…');
+ try{await nickClaim(nick);netFr();toast('✅ Ник сохранён')}catch(e){netSt('❌ '+fbErr(e))}
+}
+async function netFr(){
+ netQuit(true);
+ if(!sv.nick)return netNickScreen();
+ scr(`<h1>👥 Друзья</h1><p style="font-size:13px">Твой ник: <b>${esc(sv.nick)}</b></p><p id="nst" style="min-height:18px;font-size:12px">Загружаю…</p><div id="nfl"></div><div class="sec">Добавить друга</div><input id="nfi" class="ti" maxlength="14" placeholder="Ник друга" style="text-align:center"><button data-a="netfradd">➕ Отправить заявку</button><button class="s" data-a="netfr">↻ Обновить</button><button class="s" data-a="netnick">✏️ Сменить ник</button><button class="s" data-a="home">← Назад</button>`);
+ await netFrLoad();
+}
+async function netFrLoad(){
+ try{
+  const {F,u}=await fbMe(),{ref,get,db}=F;
+  const [fs,rq]=await Promise.all([get(ref(db,'friends/'+u)),get(ref(db,'reqs/'+u))]);
+  const fl=[],rl=[];fs.forEach(c=>{fl.push(c.key)});rq.forEach(c=>{rl.push([c.key,String((c.val()||{}).n||'Игрок')])});
+  const info=await Promise.all(fl.map(async k=>{const [n,o]=await Promise.all([get(ref(db,'users/'+k+'/n')),get(ref(db,'online/'+k))]);return {k,n:n.exists()?String(n.val()):'Игрок',on:o.exists()}}));
+  if(!$('nfl'))return;
+  info.sort((a,b)=>(b.on-a.on)||a.n.localeCompare(b.n));
+  let h='';
+  if(rl.length)h+=`<div class="sec">Заявки</div>`+rl.map(([k,n])=>`<div class="row"><div class="tx"><b>${esc(n)}</b><small> хочет дружить</small></div><button class="up" data-a="netfracc" data-id="${esc(k)}">✓</button><button class="up off" data-a="netfrdec" data-id="${esc(k)}">✕</button></div>`).join('');
+  h+=`<div class="sec">Друзья (${info.length})</div>`+(info.length?info.map(f=>`<div class="row"><div class="tx"><b>${f.on?'🟢':'⚪'} ${esc(f.n)}</b></div>${f.on?`<button class="up" data-a="netfrinv" data-id="${esc(f.k)}">Играть</button>`:''}<button class="up off" data-a="netfrdel" data-id="${esc(f.k)}">✕</button></div>`).join(''):'<p style="font-size:13px;color:var(--mut)">Пока никого. Добавь друга по нику.</p>');
+  $('nfl').innerHTML=h;netSt('');
+ }catch(e){netSt('❌ '+fbErr(e))}
+}
+async function netFrAdd(){
+ const nick=($('nfi').value||'').trim(),lc=nick.toLowerCase();
+ if(!NICK_RX.test(nick))return netSt('Введи ник друга (3–14 символов)');
+ if(sv.nick&&lc===sv.nick.toLowerCase())return netSt('Это твой ник 🙂');
+ try{
+  const {F,u}=await fbMe(),{ref,get,set,serverTimestamp,db}=F;
+  const o=await get(ref(db,'nicks/'+lc));
+  if(!o.exists())return netSt('❌ Игрока с таким ником нет');
+  const fid=o.val();
+  if((await get(ref(db,'friends/'+u+'/'+fid))).exists())return netSt('Он уже у тебя в друзьях');
+  if((await get(ref(db,'reqs/'+u+'/'+fid))).exists())return netFrAccept(fid);
+  await set(ref(db,'reqs/'+fid+'/'+u),{n:sv.nick,t:serverTimestamp()});
+  $('nfi').value='';netSt('✅ Заявка отправлена');
+ }catch(e){netSt('❌ '+fbErr(e))}
+}
+async function netFrAccept(fid){
+ try{
+  const {F,u}=await fbMe(),{ref,set,remove,db}=F;
+  await set(ref(db,'friends/'+u+'/'+fid),1);await set(ref(db,'friends/'+fid+'/'+u),1);
+  fbZ(remove(ref(db,'reqs/'+u+'/'+fid)));fbZ(remove(ref(db,'reqs/'+fid+'/'+u)));
+  toast('✅ Теперь вы друзья');await netFrLoad();
+ }catch(e){netSt('❌ '+fbErr(e))}
+}
+async function netFrRemove(fid,what){
+ try{
+  const {F,u}=await fbMe(),{ref,remove,db}=F;
+  if(what==='req')await remove(ref(db,'reqs/'+u+'/'+fid));
+  else{await remove(ref(db,'friends/'+u+'/'+fid));fbZ(remove(ref(db,'friends/'+fid+'/'+u)))}
+  await netFrLoad();
+ }catch(e){netSt('❌ '+fbErr(e))}
+}
+async function fbInvite(fid,room){
+ try{
+  const {F,u}=await fbMe();
+  await F.set(F.ref(F.db,'inv/'+fid+'/'+u),{n:sv.nick||String(sv.set.name||myName).slice(0,14),r:room,t:F.serverTimestamp()});
+  toast('📨 Приглашение отправлено');
+ }catch(e){toast('❌ Не удалось пригласить: '+fbErr(e))}
 }
 // ---------- запасной канал: комната через публичный MQTT-брокер (работает в любой сети) ----------
 const NET_BROKERS=['wss://broker.hivemq.com:8884/mqtt','wss://broker.emqx.io:8084/mqtt','wss://mqtt.eclipseprojects.io:443/mqtt','wss://test.mosquitto.org:8081/mqtt','wss://broker-cn.emqx.io:8084/mqtt'];
@@ -3758,21 +3986,32 @@ function netMqttRace(room,role){
  });
 }
 async function netRoomOpen(role,room){
- let dc,code=room;
- if(role==='host'){const r=await netMqttRace(room,role);dc=r.dc;code=room+NET_AL[r.i]}
- else{const i=room.length>5?NET_AL.indexOf(room[5]):-1,n=(window.NET_BROKERS||NET_BROKERS).length;dc=await netMqtt(room,role,i>=0&&i<n?i:null)}
+ const my=netRole;let dc,code=room;
+ if(role==='host'){
+  for(let k=0;k<5&&!dc;k++){
+   try{dc=await netFb(room,'host')}
+   catch(e){if(e.busy){room=netNewRoom();continue}console.warn('Firebase недоступен, пробую резервный канал:',e.message||e);netFbFail=e.message||String(e);break}
+  }
+  if(dc){code=room;netFbFail=''}
+  else{const r=await netMqttRace(room,role);dc=r.dc;code=room+NET_AL[r.i]}
+ }else if(room.length>5){
+  const i=NET_AL.indexOf(room[5]),n=(window.NET_BROKERS||NET_BROKERS).length;dc=await netMqtt(room,role,i>=0&&i<n?i:null);
+ }else dc=await netFb(room,role);
+ if(netRole!==my){dc.close();throw new Error('Отменено')}
  netBind(dc);netUp=1;
  if(role==='guest'){dc.onopen&&dc.onopen();setTimeout(()=>{if(netDC===dc&&!netPeerName)netSt('❌ Комната не найдена или хозяин не в сети')},9000)}
  return code;
 }
 async function netRoomHost(){
  netQuit(true);netRole='host';
- const al='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let room='';for(let i=0;i<5;i++)room+=al[Math.random()*al.length|0];
+ const invTo=netInvTo;netInvTo=null;netPubOn=invTo?0:1;
+ let room=netNewRoom();
  scr(`<h1>🌍 Создаю комнату…</h1><p>Подключаюсь к серверу комнат</p>`);
- try{room=await netRoomOpen('host',room)}catch(e){netRole=null;return scr(`<h1>Ошибка</h1><p>${esc(e.message||e)}. Проверьте интернет.</p><button class="s" data-a="netmenu">← Назад</button>`)}
+ try{room=await netRoomOpen('host',room)}catch(e){if(netRole!=='host')return;netRole=null;return scr(`<h1>Ошибка</h1><p>${esc(e.message||e)}. Проверьте интернет.</p><button class="s" data-a="netmenu">← Назад</button>`)}
  if(netRole!=='host')return;
- scr(`<h1>🌍 Комната готова</h1><p>Скажи другу этот код: он нажимает «Войти по коду комнаты».</p><input id="nco" class="ti" readonly style="text-align:center;font-size:40px;font-weight:800;letter-spacing:8px;padding:14px 0"><button data-a="netcopy" data-id="nco">📋 Копировать код</button>${tg&&tg.openTelegramLink?'<button class="s" data-a="netshare" data-id="nco">✈️ Отправить в Telegram</button>':''}<p id="nst" style="min-height:18px;font-size:12px">Жду друга…</p><button class="s" data-a="netmenu">← Назад</button>`);
- $('nco').value=room;
+ scr(`<h1>🌍 Комната готова</h1><p>Скажи другу этот код: он нажимает «Войти по коду». Или просто жди — друг может зайти из списка открытых комнат.</p><input id="nco" class="ti" readonly style="text-align:center;font-size:40px;font-weight:800;letter-spacing:8px;padding:14px 0"><button data-a="netcopy" data-id="nco">📋 Копировать код</button>${tg&&tg.openTelegramLink?'<button class="s" data-a="netshare" data-id="nco">✈️ Отправить в Telegram</button>':''}${room.length===5?`<button class="s" id="npubb" data-a="netpub">${netPubOn?'👁 Видна в списке открытых комнат':'🙈 Скрыта — только по коду'}</button>`:''}<p id="nst" style="min-height:18px;font-size:12px">${room.length===5?'Жду друга…':'⚠️ Firebase не подключился: '+esc(netFbFail||'неизвестная ошибка')+'. Включён резервный канал.'}</p><button class="s" data-a="netmenu">← Назад</button>`);
+$('nco').value=room;
+ if(invTo&&room.length===5)fbInvite(invTo,room);
 }
 function netRoomJoin(){
  netQuit(true);netRole='guest';
@@ -3846,6 +4085,17 @@ async function netAct(a,d){
  if(a==='net'||a==='netmenu')return netMenu();
  if(a==='nethost')return netHostStart();
  if(a==='netroom')return netRoomHost();
+ if(a==='netfblist')return netFbList();
+ if(a==='netfr')return netFr();
+ if(a==='netnick')return netNickScreen();
+ if(a==='netnickgo')return netNickGo();
+ if(a==='netfradd')return netFrAdd();
+ if(a==='netfracc')return netFrAccept(d.id);
+ if(a==='netfrdec')return netFrRemove(d.id,'req');
+ if(a==='netfrdel')return netFrRemove(d.id,'fr');
+ if(a==='netfrinv'){netInvTo=d.id;return netRoomHost()}
+ if(a==='netfbjoin')return netFbJoin(d.id);
+ if(a==='netpub')return netPub();
  if(a==='netroomjoin')return netRoomJoin();
  if(a==='netroomgo')return netRoomGo();
  if(a==='netjoin')return netJoinScreen();
@@ -4076,3 +4326,4 @@ function netMsg(d){
 }
 
 home();
+fbBoot();
