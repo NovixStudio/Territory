@@ -34,7 +34,7 @@
   const [A,D,U]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-database.js'),import(B+'firebase-auth.js')]);
   const app=A.initializeApp(firebaseConfig),db=D.getDatabase(app),auth=U.getAuth(app);
   const authReady=(async()=>{try{await Promise.race([U.signInAnonymously(auth),new Promise((_,r)=>setTimeout(()=>r(new Error('auth timeout')),6000))])}catch(e){console.warn('Firebase anonymous auth:',e&&e.message||e)}})();
-  window.FB={db,authReady,uid:()=>auth.currentUser?auth.currentUser.uid:null,ref:D.ref,set:D.set,get:D.get,push:D.push,remove:D.remove,query:D.query,limitToLast:D.limitToLast,onChildAdded:D.onChildAdded,onValue:D.onValue,onDisconnect:D.onDisconnect,serverTimestamp:D.serverTimestamp};
+  window.FB={db,authReady,uid:()=>auth.currentUser?auth.currentUser.uid:null,ref:D.ref,set:D.set,get:D.get,push:D.push,remove:D.remove,update:D.update,query:D.query,limitToLast:D.limitToLast,onChildAdded:D.onChildAdded,onValue:D.onValue,onDisconnect:D.onDisconnect,serverTimestamp:D.serverTimestamp};
   import(B+'firebase-analytics.js').then(m=>{try{m.getAnalytics(app)}catch(e){}}).catch(()=>{});
  }catch(e){window.FB_ERR=e;console.warn('Firebase не загрузился:',e)}
 })();
